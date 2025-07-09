@@ -45,6 +45,7 @@
     "chai": "^4.5.0",
     "clsx": "^2.1.1",
     "cssnano": "^6.1.2",
+    "electron": "^37.2.0",
     "eslint": "8.57.1",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-es": "^4.1.0",
