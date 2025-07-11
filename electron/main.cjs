@@ -215,6 +215,11 @@ ipcMain.handle('open-file', async (event) => {
       let jsonData;
       try {
         jsonData = JSON.parse(fileContent);
+        // Ensure the data has the expected structure for a State object
+        if (!jsonData.code) {
+          console.error('Invalid state format: Missing required fields');
+          return { success: false, error: 'Invalid state format: Missing required fields' };
+        }
       } catch (parseError) {
         console.error('Failed to parse JSON:', parseError);
         return { success: false, error: 'Invalid JSON file format' };

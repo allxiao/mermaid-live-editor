@@ -10,7 +10,7 @@ interface Window {
     openFile: () => Promise<{
       success: boolean;
       path?: string;
-      data?: import('$lib/types').HistoryEntry[];
+      data?: import('$lib/types').State;
       error?: string;
     }>;
   };

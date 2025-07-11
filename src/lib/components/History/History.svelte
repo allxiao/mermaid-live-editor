@@ -51,14 +51,26 @@
     }
   ]);
 
+  // Track the linked file for display
+  let linkedFile: string | null = $state(null);
+
+  // Subscribe to changes in the state to update the linked file
+  inputStateStore.subscribe((state) => {
+    if (state && typeof state === 'object' && 'linkedFile' in state) {
+      linkedFile = (state as State).linkedFile;
+    }
+  });
+
   const openFile = () => {
     if (window.electronAPI && window.electronAPI.openFile) {
       window.electronAPI
         .openFile()
         .then((result) => {
           if (result.success && result.data) {
+            result.data.linkedFile = result.path;
             restoreHistoryItem(result.data);
-            notify(`History loaded from ${result.path}`);
+
+            notify(`File loaded from ${result.path}`);
             logEvent('history', {
               action: 'openFile',
               success: true
@@ -88,17 +100,27 @@
 
   const saveToFile = () => {
     const currentState: string = getStateString();
+    const state = get(inputStateStore) as State;
+    const linkedFile = state.linkedFile;
 
     if (window.electronAPI && window.electronAPI.saveFile) {
       window.electronAPI
         .saveFile({
           content: currentState,
           format: 'json',
-          defaultPath: `mermaid-${dayjs().format('YYYY-MM-DD-HHmmss')}.json`
+          defaultPath: linkedFile || `mermaid-${dayjs().format('YYYY-MM-DD-HHmmss')}.json`
         })
         .then((result) => {
           if (result.success) {
-            notify(`History saved to ${result.path}`);
+            // Update the linkedFile property
+            if (result.path) {
+              inputStateStore.update((state) => ({
+                ...state,
+                linkedFile: result.path
+              }));
+            }
+
+            notify(`File saved to ${result.path}`);
             logEvent('history', {
               action: 'saveToFile',
               success: true
@@ -243,6 +265,14 @@
       {/if}
     </div>
   {/snippet}
+
+  {#if linkedFile}
+    <div class="border-b border-primary-foreground/10 px-4 py-2 text-xs text-primary-foreground/50">
+      <span class="font-medium">Linked file:</span>
+      {linkedFile}
+    </div>
+  {/if}
+
   <ul class="flex h-full min-w-fit flex-col gap-2 overflow-auto p-2" id="historyList">
     {#if $historyStore.length > 0}
       {#each $historyStore as { id, state, time, name, url, type } (id)}
