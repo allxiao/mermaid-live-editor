@@ -16,6 +16,7 @@
   import UploadIcon from '~icons/material-symbols/upload-rounded';
   import FolderOpenIcon from '~icons/material-symbols/folder-open-outline-rounded';
   import FileSaveIcon from '~icons/material-symbols/file-save-outline-rounded';
+  import SaveAsIcon from '~icons/material-symbols/save-as-outline-rounded';
   import HistoryIcon from '~icons/mdi/clock-outline';
   import GitAltIcon from '~icons/mdi/git';
   import { Button } from '../ui/button';
@@ -104,11 +105,13 @@
     const linkedFile = state.linkedFile;
 
     if (window.electronAPI && window.electronAPI.saveFile) {
+      // If we have a linked file, save directly to it without showing the dialog
       window.electronAPI
         .saveFile({
           content: currentState,
           format: 'json',
-          defaultPath: linkedFile || `mermaid-${dayjs().format('YYYY-MM-DD-HHmmss')}.json`
+          defaultPath: linkedFile || `mermaid-${dayjs().format('YYYY-MM-DD-HHmmss')}.json`,
+          skipDialog: !!linkedFile // Skip dialog if we have a linked file
         })
         .then((result) => {
           if (result.success) {
@@ -138,6 +141,58 @@
           notify(`Error saving file: ${error.message}`);
           logEvent('history', {
             action: 'saveToFile',
+            success: false,
+            error: error.message
+          });
+        });
+    } else {
+      // Fallback to browser download if not in Electron
+      downloadHistory();
+    }
+  };
+
+  // Add saveAsToFile function
+  const saveAsToFile = () => {
+    const currentState: string = getStateString();
+    const state = get(inputStateStore) as State;
+    const linkedFile = state.linkedFile;
+
+    if (window.electronAPI && window.electronAPI.saveFile) {
+      window.electronAPI
+        .saveFile({
+          content: currentState,
+          format: 'json',
+          defaultPath: linkedFile || `mermaid-${dayjs().format('YYYY-MM-DD-HHmmss')}.json`,
+          skipDialog: false // Always show the dialog for Save As
+        })
+        .then((result) => {
+          if (result.success) {
+            // Update the linkedFile property
+            if (result.path) {
+              inputStateStore.update((state) => ({
+                ...state,
+                linkedFile: result.path
+              }));
+            }
+
+            notify(`File saved to ${result.path}`);
+            logEvent('history', {
+              action: 'saveAsToFile',
+              success: true
+            });
+          } else if (result.error) {
+            notify(`Failed to save: ${result.error}`);
+            logEvent('history', {
+              action: 'saveAsToFile',
+              success: false,
+              error: result.error
+            });
+          }
+        })
+        .catch((error) => {
+          notify(`Error saving file: ${error.message}`);
+          logEvent('history', {
+            action: 'saveAsToFile',
             success: false,
             error: error.message
           });
@@ -233,6 +288,16 @@
       <Button size="icon" variant="ghost" id="saveToFile" onclick={saveToFile} title="Save to File">
         <FileSaveIcon />
       </Button>
+      {#if linkedFile}
+        <Button
+          size="icon"
+          variant="ghost"
+          id="saveAsToFile"
+          onclick={saveAsToFile}
+          title="Save As...">
+          <SaveAsIcon />
+        </Button>
+      {/if}
       <Button
         size="icon"
         variant="ghost"

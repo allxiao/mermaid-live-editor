@@ -6,6 +6,7 @@ interface Window {
       content: string;
       format: string;
       defaultPath?: string;
+      skipDialog?: boolean;
     }) => Promise<{ success: boolean; path?: string; error?: string }>;
     openFile: () => Promise<{
       success: boolean;

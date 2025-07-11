@@ -161,21 +161,27 @@ app.whenReady().then(() => {
 });
 
 // This is where you handle the "save to file" logic
-ipcMain.handle('save-file', async (event, { content, format, defaultPath }) => {
-  const { filePath } = await dialog.showSaveDialog({
-    title: 'Save Diagram',
-    buttonLabel: 'Save',
-    defaultPath,
-    filters: [
-      format === 'svg'
-        ? { name: 'SVG Images', extensions: ['svg'] }
-        : format === 'png'
-          ? { name: 'PNG Images', extensions: ['png'] }
-          : format === 'json'
-            ? { name: 'JSON Files', extensions: ['json'] }
-            : { name: 'All Files', extensions: ['*'] }
-    ]
-  });
+ipcMain.handle('save-file', async (event, { content, format, defaultPath, skipDialog }) => {
+  let filePath = defaultPath;
+
+  // Only show the save dialog if skipDialog is not true
+  if (!skipDialog) {
+    const result = await dialog.showSaveDialog({
+      title: 'Save Diagram',
+      buttonLabel: 'Save',
+      defaultPath,
+      filters: [
+        format === 'svg'
+          ? { name: 'SVG Images', extensions: ['svg'] }
+          : format === 'png'
+            ? { name: 'PNG Images', extensions: ['png'] }
+            : format === 'json'
+              ? { name: 'JSON Files', extensions: ['json'] }
+              : { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+    filePath = result.filePath;
+  }
 
   if (filePath) {
     try {
@@ -193,7 +199,7 @@ ipcMain.handle('save-file', async (event, { content, format, defaultPath }) => {
       return { success: false, error: error.message };
     }
   }
-  return { success: false }; // User cancelled the dialog
+  return { success: false }; // User cancelled the dialog or no path
 });
 
 // Handler for opening JSON files
