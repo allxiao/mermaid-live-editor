@@ -21,7 +21,7 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 function registerProtocol() {
-  const docsRoot = path.join(app.getAppPath(), 'docs');
+  const docsRoot = path.join(process.resourcesPath, 'docs');
 
   protocol.handle(scheme, async (request) => {
     // 1. Create a URL object from the requested URL

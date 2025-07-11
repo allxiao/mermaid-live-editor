@@ -1,0 +1,45 @@
+{
+  "name": "mermaid-desktop",
+  "version": "0.1.0",
+  "description": "A desktop version of Mermaid Live Editor, built with Electron.",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "wait-on http://localhost:3000 && electron .",
+    "dist": "electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "build": {
+    "appId": "me.allxiao.mermaid-desktop",
+    "productName": "Mermaid Desktop",
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "package.json"
+    ],
+    "extraFiles": [
+      {
+        "from": "../docs",
+        "to": "resources/docs",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "../static/favicon.png"
+    }
+  },
+  "keywords": [],
+  "author": "allxiao",
+  "license": "MIT",
+  "packageManager": "pnpm@10.13.1+sha512.37ebf1a5c7a30d5fabe0c5df44ee8da4c965ca0c5af3dbab28c3a1681b70a256218d05c81c9c0dcf767ef6b8551eb5b960042b9ed4300c59242336377e01cfad",
+  "devDependencies": {
+    "electron": "^37.2.1",
+    "electron-builder": "^26.0.12",
+    "wait-on": "^8.0.3"
+  }
+}
