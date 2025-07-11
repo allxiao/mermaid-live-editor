@@ -14,6 +14,7 @@
   import SaveIcon from '~icons/material-symbols/save-outline-rounded';
   import UndoIcon from '~icons/material-symbols/settings-backup-restore-rounded';
   import UploadIcon from '~icons/material-symbols/upload-rounded';
+  import FolderOpenIcon from '~icons/material-symbols/folder-open-outline-rounded';
   import FileSaveIcon from '~icons/material-symbols/file-save-outline-rounded';
   import HistoryIcon from '~icons/mdi/clock-outline';
   import GitAltIcon from '~icons/mdi/git';
@@ -50,16 +51,50 @@
     }
   ]);
 
+  const openFile = () => {
+    if (window.electronAPI && window.electronAPI.openFile) {
+      window.electronAPI
+        .openFile()
+        .then((result) => {
+          if (result.success && result.data) {
+            restoreHistoryItem(result.data);
+            notify(`History loaded from ${result.path}`);
+            logEvent('history', {
+              action: 'openFile',
+              success: true
+            });
+          } else if (result.error) {
+            notify(`Failed to open file: ${result.error}`);
+            logEvent('history', {
+              action: 'openFile',
+              success: false,
+              error: result.error
+            });
+          }
+        })
+        .catch((error) => {
+          notify(`Error opening file: ${error.message}`);
+          logEvent('history', {
+            action: 'openFile',
+            success: false,
+            error: error.message
+          });
+        });
+    } else {
+      // Fallback to browser upload if not in Electron
+      uploadHistory();
+    }
+  };
+
   const saveToFile = () => {
-    const data = get(historyStore);
-    const currentMode = get(historyModeStore);
+    const currentState: string = getStateString();
 
     if (window.electronAPI && window.electronAPI.saveFile) {
       window.electronAPI
         .saveFile({
-          content: JSON.stringify(data, null, 2),
+          content: currentState,
           format: 'json',
-          defaultPath: `mermaid-${currentMode}-${dayjs().format('YYYY-MM-DD-HHmmss')}.json`
+          defaultPath: `mermaid-${dayjs().format('YYYY-MM-DD-HHmmss')}.json`
         })
         .then((result) => {
           if (result.success) {
@@ -170,6 +205,9 @@
 <Card onselect={tabSelectHandler} isOpen isClosable={false} {tabs}>
   {#snippet actions()}
     <div class="flex items-center gap-2">
+      <Button size="icon" variant="ghost" id="openFile" onclick={openFile} title="Open File">
+        <FolderOpenIcon />
+      </Button>
       <Button size="icon" variant="ghost" id="saveToFile" onclick={saveToFile} title="Save to File">
         <FileSaveIcon />
       </Button>

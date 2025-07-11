@@ -7,5 +7,11 @@ interface Window {
       format: string;
       defaultPath?: string;
     }) => Promise<{ success: boolean; path?: string; error?: string }>;
+    openFile: () => Promise<{
+      success: boolean;
+      path?: string;
+      data?: import('$lib/types').HistoryEntry[];
+      error?: string;
+    }>;
   };
 }

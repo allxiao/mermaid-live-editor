@@ -195,3 +195,35 @@ ipcMain.handle('save-file', async (event, { content, format, defaultPath }) => {
   }
   return { success: false }; // User cancelled the dialog
 });
+
+// Handler for opening JSON files
+ipcMain.handle('open-file', async (event) => {
+  const { filePaths } = await dialog.showOpenDialog({
+    title: 'Open History File',
+    buttonLabel: 'Open',
+    filters: [
+      { name: 'JSON Files', extensions: ['json'] },
+      { name: 'All Files', extensions: ['*'] }
+    ],
+    properties: ['openFile']
+  });
+
+  if (filePaths && filePaths.length > 0) {
+    try {
+      const filePath = filePaths[0];
+      const fileContent = fs.readFileSync(filePath, 'utf-8');
+      let jsonData;
+      try {
+        jsonData = JSON.parse(fileContent);
+      } catch (parseError) {
+        console.error('Failed to parse JSON:', parseError);
+        return { success: false, error: 'Invalid JSON file format' };
+      }
+      return { success: true, path: filePath, data: jsonData };
+    } catch (error) {
+      console.error('Failed to read the file:', error);
+      return { success: false, error: error.message };
+    }
+  }
+  return { success: false }; // User cancelled the dialog
+});
