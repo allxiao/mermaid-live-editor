@@ -35,6 +35,7 @@ export interface State {
   pan?: { x: number; y: number };
   zoom?: number;
   loader?: LoaderConfig;
+  linkedFile?: string;
 }
 
 export interface ValidatedState extends State {

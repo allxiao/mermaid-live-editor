@@ -14,6 +14,7 @@
   import SaveIcon from '~icons/material-symbols/save-outline-rounded';
   import UndoIcon from '~icons/material-symbols/settings-backup-restore-rounded';
   import UploadIcon from '~icons/material-symbols/upload-rounded';
+  import FileSaveIcon from '~icons/material-symbols/file-save-outline-rounded';
   import HistoryIcon from '~icons/mdi/clock-outline';
   import GitAltIcon from '~icons/mdi/git';
   import { Button } from '../ui/button';
@@ -48,6 +49,47 @@
       icon: HistoryIcon
     }
   ]);
+
+  const saveToFile = () => {
+    const data = get(historyStore);
+    const currentMode = get(historyModeStore);
+
+    if (window.electronAPI && window.electronAPI.saveFile) {
+      window.electronAPI
+        .saveFile({
+          content: JSON.stringify(data, null, 2),
+          format: 'json',
+          defaultPath: `mermaid-${currentMode}-${dayjs().format('YYYY-MM-DD-HHmmss')}.json`
+        })
+        .then((result) => {
+          if (result.success) {
+            notify(`History saved to ${result.path}`);
+            logEvent('history', {
+              action: 'saveToFile',
+              success: true
+            });
+          } else if (result.error) {
+            notify(`Failed to save: ${result.error}`);
+            logEvent('history', {
+              action: 'saveToFile',
+              success: false,
+              error: result.error
+            });
+          }
+        })
+        .catch((error) => {
+          notify(`Error saving file: ${error.message}`);
+          logEvent('history', {
+            action: 'saveToFile',
+            success: false,
+            error: error.message
+          });
+        });
+    } else {
+      // Fallback to browser download if not in Electron
+      downloadHistory();
+    }
+  };
 
   const downloadHistory = () => {
     const data = get(historyStore);
@@ -128,6 +170,9 @@
 <Card onselect={tabSelectHandler} isOpen isClosable={false} {tabs}>
   {#snippet actions()}
     <div class="flex items-center gap-2">
+      <Button size="icon" variant="ghost" id="saveToFile" onclick={saveToFile} title="Save to File">
+        <FileSaveIcon />
+      </Button>
       <Button
         size="icon"
         variant="ghost"

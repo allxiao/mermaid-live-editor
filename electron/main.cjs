@@ -161,15 +161,19 @@ app.whenReady().then(() => {
 });
 
 // This is where you handle the "save to file" logic
-ipcMain.handle('save-file', async (event, { content, format }) => {
+ipcMain.handle('save-file', async (event, { content, format, defaultPath }) => {
   const { filePath } = await dialog.showSaveDialog({
     title: 'Save Diagram',
     buttonLabel: 'Save',
+    defaultPath,
     filters: [
       format === 'svg'
         ? { name: 'SVG Images', extensions: ['svg'] }
-        : { name: 'PNG Images', extensions: ['png'] },
-      { name: 'All Files', extensions: ['*'] }
+        : format === 'png'
+          ? { name: 'PNG Images', extensions: ['png'] }
+          : format === 'json'
+            ? { name: 'JSON Files', extensions: ['json'] }
+            : { name: 'All Files', extensions: ['*'] }
     ]
   });
 
@@ -180,7 +184,7 @@ ipcMain.handle('save-file', async (event, { content, format }) => {
         const data = content.replace(/^data:image\/png;base64,/, '');
         fs.writeFileSync(filePath, data, 'base64');
       } else {
-        // SVG is just text
+        // SVG and JSON are just text
         fs.writeFileSync(filePath, content, 'utf-8');
       }
       return { success: true, path: filePath };
