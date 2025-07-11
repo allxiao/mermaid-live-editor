@@ -14,5 +14,6 @@ interface Window {
       data?: import('$lib/types').State;
       error?: string;
     }>;
+    setWindowTitle: (title?: string) => Promise<{ success: boolean; error?: string }>;
   };
 }

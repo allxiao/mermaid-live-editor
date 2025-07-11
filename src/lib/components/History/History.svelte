@@ -59,6 +59,17 @@
   inputStateStore.subscribe((state) => {
     if (state && typeof state === 'object' && 'linkedFile' in state) {
       linkedFile = (state as State).linkedFile;
+
+      // Update the window title when linkedFile changes
+      if (window.electronAPI && window.electronAPI.setWindowTitle) {
+        if (linkedFile) {
+          // Extract just the filename from the path
+          const fileName = linkedFile.split(/[/\\]/).pop();
+          window.electronAPI.setWindowTitle(fileName);
+        } else {
+          window.electronAPI.setWindowTitle(); // Reset to default title
+        }
+      }
     }
   });
 

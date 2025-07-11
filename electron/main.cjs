@@ -89,11 +89,15 @@ function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    title: 'Mermaid Live Editor',
     webPreferences: {
       // Preload script is crucial for secure communication between main and renderer
       preload: path.join(__dirname, 'preload.cjs')
     }
   });
+
+  // Store the main window reference globally so we can access it from IPC handlers
+  global.mainWindow = mainWindow;
 
   function redirectToInternalUrl(requestedUrl) {
     const prefix = app.isPackaged
@@ -237,4 +241,14 @@ ipcMain.handle('open-file', async (event) => {
     }
   }
   return { success: false }; // User cancelled the dialog
+});
+
+// Handler for setting the window title
+ipcMain.handle('set-window-title', async (event, title) => {
+  if (global.mainWindow) {
+    const baseTitle = 'Mermaid Live Editor';
+    global.mainWindow.setTitle(title ? `${title} - ${baseTitle}` : baseTitle);
+    return { success: true };
+  }
+  return { success: false, error: 'Main window not available' };
 });
