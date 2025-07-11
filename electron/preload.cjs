@@ -1,5 +1,5 @@
-// preload.js
-import { contextBridge, ipcRenderer } from 'electron';
+// preload.cjs
+const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   // Expose a function that the frontend can call

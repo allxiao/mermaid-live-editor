@@ -3,7 +3,7 @@
   "version": "2.0.67",
   "type": "module",
   "license": "MIT",
-  "main": "electron/main.js",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "concurrently \"pnpm:dev:vite\" \"pnpm:dev:electron\"",
     "dev:vite": "vite dev",
@@ -11,6 +11,8 @@
     "dev:force": "MERMAID_LOCAL=true pnpm dev --force",
     "dev:test": "pnpm dev",
     "build": "vite build",
+    "build:debug": "vite build --mode debug",
+    "pack": "pnpm run build && electron-builder",
     "preview": "vite preview",
     "lint": "prettier --check --cache . && eslint --ignore-path .gitignore .",
     "lint:fix": "prettier --write --cache . && eslint --fix --ignore-path .gitignore .",
@@ -24,6 +26,22 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug"
+  },
+  "build": {
+    "appId": "me.allxiao.mermaid-desktop",
+    "productName": "Mermaid Desktop",
+    "files": [
+      "electron/**/*",
+      "docs/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "static/favicon.png"
+    }
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
@@ -50,6 +68,7 @@
     "concurrently": "^9.2.0",
     "cssnano": "^6.1.2",
     "electron": "^37.2.0",
+    "electron-builder": "^26.0.12",
     "eslint": "8.57.1",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-es": "^4.1.0",
@@ -128,6 +147,7 @@
     "onlyBuiltDependencies": [
       "deasync",
       "electron",
+      "electron-winstaller",
       "esbuild",
       "svelte-preprocess"
     ],
