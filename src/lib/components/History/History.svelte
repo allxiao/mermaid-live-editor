@@ -60,9 +60,7 @@
       // Update the window title when linkedFile changes
       if (window.electronAPI && window.electronAPI.setWindowTitle) {
         if (linkedFile) {
-          // Extract just the filename from the path
-          const fileName = linkedFile.split(/[/\\]/).pop();
-          window.electronAPI.setWindowTitle(fileName);
+          window.electronAPI.setWindowTitle(linkedFile);
         } else {
           window.electronAPI.setWindowTitle(); // Reset to default title
         }
