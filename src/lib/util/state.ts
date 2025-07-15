@@ -23,6 +23,7 @@ export const defaultState: State = {
     C -->|Three| F[fa:fa-car Car]
   `,
   grid: true,
+  linkedFile: '',
   mermaid: formatJSON({
     theme: 'default'
   }),

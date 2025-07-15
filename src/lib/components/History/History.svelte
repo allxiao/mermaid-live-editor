@@ -2,7 +2,7 @@
   import Card from '$lib/components/Card/Card.svelte';
   import type { HistoryEntry, HistoryType, State, Tab } from '$lib/types';
   import { notify, prompt } from '$lib/util/notify';
-  import { getStateString, inputStateStore } from '$lib/util/state';
+  import { getStateString, inputStateStore, defaultState } from '$lib/util/state';
   import { logEvent } from '$lib/util/stats';
   import dayjs from 'dayjs';
   import dayjsRelativeTime from 'dayjs/plugin/relativeTime';
@@ -17,6 +17,7 @@
   import FolderOpenIcon from '~icons/material-symbols/folder-open-outline-rounded';
   import FileSaveIcon from '~icons/material-symbols/file-save-outline-rounded';
   import SaveAsIcon from '~icons/material-symbols/save-as-outline-rounded';
+  import FileAddIcon from '~icons/material-symbols/note-add-outline-rounded';
   import HistoryIcon from '~icons/mdi/clock-outline';
   import GitAltIcon from '~icons/mdi/git';
   import { Button } from '../ui/button';
@@ -53,12 +54,12 @@
   ]);
 
   // Track the linked file for display
-  let linkedFile: string | null = $state(null);
+  let linkedFile: string = $state('');
 
   // Subscribe to changes in the state to update the linked file
   inputStateStore.subscribe((state) => {
     if (state && typeof state === 'object' && 'linkedFile' in state) {
-      linkedFile = (state as State).linkedFile;
+      linkedFile = (state as State).linkedFile ?? '';
 
       // Update the window title when linkedFile changes
       if (window.electronAPI && window.electronAPI.setWindowTitle) {
@@ -79,7 +80,7 @@
         .openFile()
         .then((result) => {
           if (result.success && result.data) {
-            result.data.linkedFile = result.path;
+            result.data.linkedFile = result.path ?? '';
             restoreHistoryItem(result.data);
 
             notify(`File loaded from ${result.path}`);
@@ -97,17 +98,23 @@
           }
         })
         .catch((error) => {
-          notify(`Error opening file: ${error.message}`);
-          logEvent('history', {
-            action: 'openFile',
-            success: false,
-            error: error.message
-          });
+          notify(`Failed to open file: ${error}`);
         });
-    } else {
-      // Fallback to browser upload if not in Electron
-      uploadHistory();
     }
+  };
+
+  const newDiagram = () => {
+    inputStateStore.set(defaultState);
+    addHistoryEntry({
+      state: $inputStateStore,
+      time: Date.now(),
+      type: 'manual'
+    });
+    notify('Created new diagram');
+    logEvent('history', {
+      action: 'newDiagram',
+      success: true
+    });
   };
 
   const saveToFile = () => {
@@ -130,7 +137,7 @@
             if (result.path) {
               inputStateStore.update((state) => ({
                 ...state,
-                linkedFile: result.path
+                linkedFile: result.path ?? ''
               }));
             }
 
@@ -182,7 +189,7 @@
             if (result.path) {
               inputStateStore.update((state) => ({
                 ...state,
-                linkedFile: result.path
+                linkedFile: result.path ?? ''
               }));
             }
 
@@ -293,6 +300,9 @@
 <Card onselect={tabSelectHandler} isOpen isClosable={false} {tabs}>
   {#snippet actions()}
     <div class="flex items-center gap-2">
+      <Button size="icon" variant="ghost" id="newDiagram" onclick={newDiagram} title="New Diagram">
+        <FileAddIcon />
+      </Button>
       <Button size="icon" variant="ghost" id="openFile" onclick={openFile} title="Open File">
         <FolderOpenIcon />
       </Button>
