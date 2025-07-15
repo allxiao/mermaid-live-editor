@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 const SCHEME = 'mermaid-desktop';
+const MERMAID_LIVE = 'mermaid.live';
 
 // --- IMPORTANT STEP ---
 // 1. Register the scheme as privileged before the app is ready.
@@ -20,21 +21,46 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
+const pathMapping = {
+  '/index': '/index.html',
+  '/': '/index.html',
+  '/index/': '/index.html',
+  '/edit': '/edit.html',
+  '/edit/': '/edit.html',
+  '/404': '/404.html',
+  '/404/': '/404.html',
+  '/view': '/view.html',
+  '/view/': '/view.html'
+};
+
 function registerProtocol() {
   const docsRoot = path.join(process.resourcesPath, 'docs');
 
   protocol.handle(SCHEME, async (request) => {
-    console.debug("request url", request.url);
-
     // 1. Create a URL object from the requested URL
     const url = new URL(request.url);
+
+    if (url.hostname !== MERMAID_LIVE) {
+      console.error(`[Security] Blocked request for invalid hostname: ${url.hostname}`);
+      return new Response('Invalid hostname', { status: 400 }); // Bad Request
+    }
 
     // 2. Get the path part, e.g., for "app://index.html", pathname is "/index.html"
     // And decode it to handle spaces or special characters, e.g., %20 -> space
     const requestedPath = decodeURI(url.pathname);
 
+    if (requestedPath === '/api/event') {
+      return new Response('ok', { status: 200 }); // Handle the API event request
+    }
+
+    const fileName = Object.prototype.hasOwnProperty.call(pathMapping, requestedPath)
+      ? pathMapping[requestedPath]
+      : requestedPath;
+
     // 3. Construct the absolute path to the file inside your 'docs' directory
-    let filePath = path.join(docsRoot, requestedPath);
+    let filePath = path.join(docsRoot, fileName);
+
+    console.debug("requestedPath", requestedPath, "filePath", filePath);
 
     // 4. IMPORTANT SECURITY STEP:
     //    Ensure the resolved path is still inside your app's 'docs' folder.
@@ -45,35 +71,6 @@ function registerProtocol() {
     }
 
     try {
-      // Check if the path exists and if it's a directory
-      const stats = await fs.promises.stat(filePath).catch(() => {
-        // If stat fails, the path likely doesn't exist.
-        // We'll let the fetch below handle the 404.
-      });
-
-      if (stats && stats.isDirectory()) {
-        // If it's a directory, look for default files
-        const defaultFiles = ['index.html', 'index.htm'];
-        let found = false;
-        for (const defaultFile of defaultFiles) {
-          const defaultFilePath = path.join(filePath, defaultFile);
-          try {
-            // Check if the default file exists
-            await fs.promises.access(defaultFilePath);
-            filePath = defaultFilePath; // If it exists, update the filePath
-            found = true;
-            break;
-          } catch (e) {
-            // This default file doesn't exist, try the next one
-          }
-        }
-
-        if (!found) {
-          // If no default file is found in the directory
-          return new Response('Not Found', { status: 404 });
-        }
-      }
-
       // 5. Use Electron's `net.fetch` to create a Response object from the file path.
       const response = await net.fetch(`file://${filePath}`);
       return response;
@@ -101,7 +98,7 @@ function createWindow() {
 
   function redirectToInternalUrl(requestedUrl) {
     const prefix = app.isPackaged
-      ? `${SCHEME}://`
+      ? `${SCHEME}://mermaid.live`
       : `http://localhost:3000`;
 
     const newUrl = `${prefix}${requestedUrl.pathname}${requestedUrl.search}${requestedUrl.hash}`;
@@ -151,7 +148,7 @@ function createWindow() {
   if (app.isPackaged) {
     // In production, load the static HTML file that was built
     // The path is relative to the CJS-style __dirname
-    mainWindow.loadURL(`${SCHEME}://index.html`);
+    mainWindow.loadURL(`${SCHEME}://mermaid.live`);
   } else {
     // In development, load from the Vite dev server
     mainWindow.loadURL('http://localhost:3000/');
