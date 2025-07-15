@@ -49,22 +49,13 @@
     }
   ]);
 
-  // Track the linked file for display
+  // Track the linked file for display purposes only
   let linkedFile: string = $state('');
 
-  // Subscribe to changes in the state to update the linked file
+  // Subscribe to changes in the state to update the displayed linked file
   inputStateStore.subscribe((state) => {
     if (state && typeof state === 'object' && 'linkedFile' in state) {
       linkedFile = (state as State).linkedFile ?? '';
-
-      // Update the window title when linkedFile changes
-      if (window.electronAPI && window.electronAPI.setWindowTitle) {
-        if (linkedFile) {
-          window.electronAPI.setWindowTitle(linkedFile);
-        } else {
-          window.electronAPI.setWindowTitle(); // Reset to default title
-        }
-      }
     }
   });
 

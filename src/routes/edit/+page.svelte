@@ -247,6 +247,18 @@
     window.addEventListener('appinstalled', () => {
       logEvent('pwaInstalled', { isMobile });
     });
+
+    // Set up window title update when linkedFile changes
+    inputStateStore.subscribe((state) => {
+      if (window.electronAPI && window.electronAPI.setWindowTitle && state) {
+        const linkedFile = state.linkedFile;
+        if (linkedFile) {
+          window.electronAPI.setWindowTitle(linkedFile);
+        } else {
+          window.electronAPI.setWindowTitle(); // Reset to default title
+        }
+      }
+    });
   });
 
   let isHistoryOpen = $state(false);
