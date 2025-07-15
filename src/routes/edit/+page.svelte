@@ -29,7 +29,7 @@
     urlsStore
   } from '$/util/state';
   import { logEvent } from '$/util/stats';
-  import { initHandler } from '$/util/util';
+  import { formatJSON, initHandler } from '$/util/util';
   import { onMount } from 'svelte';
   import { get } from 'svelte/store';
   import dayjs from 'dayjs';
@@ -64,7 +64,12 @@
 
   // Functions for file operations
   const newDiagram = () => {
-    inputStateStore.set(defaultState);
+    inputStateStore.set({
+      ...defaultState,
+      mermaid: formatJSON({
+        theme: 'neutral'
+      })
+    });
     addHistoryEntry({
       state: $inputStateStore,
       time: Date.now(),
