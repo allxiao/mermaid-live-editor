@@ -184,8 +184,8 @@ packet-beta
         if(order != null) {
           par {
             PurchaseService.createPO(order)
-            InvoiceService.createInvoice(order)      
-          }      
+            InvoiceService.createInvoice(order)
+          }
         }
       }
     }
@@ -194,7 +194,8 @@ packet-beta
 
   type SampleTypes = keyof typeof samples;
   const loadSampleDiagram = (diagramType: SampleTypes): void => {
-    updateCode(samples[diagramType], {
+    const code = '---\nconfig:\n  theme: neutral\n---\n' + samples[diagramType];
+    updateCode(code, {
       resetPanZoom: true,
       updateDiagram: true
     });

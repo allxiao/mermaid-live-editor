@@ -64,12 +64,14 @@
 
   // Functions for file operations
   const newDiagram = () => {
-    inputStateStore.set({
+    const state = {
       ...defaultState,
+      code: '---\nconfig:\n  theme: neutral\n---\n' + defaultState.code,
       mermaid: formatJSON({
         theme: 'neutral'
       })
-    });
+    };
+    inputStateStore.set(state);
     addHistoryEntry({
       state: $inputStateStore,
       time: Date.now(),
