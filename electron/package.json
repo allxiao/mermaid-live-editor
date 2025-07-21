@@ -1,6 +1,6 @@
 {
   "name": "mermaid-desktop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A desktop version of Mermaid Live Editor, built with Electron.",
   "main": "main.cjs",
   "scripts": {
